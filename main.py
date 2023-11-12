@@ -1,8 +1,5 @@
 import pygame
 
-# Add physics -> dot product, etc.
-# Add AI -> CPU levels, machine learning
-
 # Initialize game
 pygame.init()
 
@@ -25,7 +22,7 @@ BALL_RADIUS = 7
 class Paddle:
 
     COLOR = WHITE
-    VELOCITY = 10
+    VELOCITY = 7
 
     def __init__(self, x, y, width, height):
         self.x = x
@@ -84,6 +81,40 @@ def draw(win, paddles, ball):
     pygame.display.update()
 
 
+# Handle ball collision for ceiling/floor and paddle
+def handle_collision(ball, left_paddle, right_paddle):
+    # Floor
+    if ball.y + ball.radius >= HEIGHT:
+        ball.y_vel *= -1
+    # Ceiling
+    elif ball.y - ball.radius <= 0:
+        ball.y_vel *= -1
+
+    # Left Paddle
+    if ball.x_vel < 0:
+        if ball.y >= left_paddle.y and ball.y <= left_paddle.y + left_paddle.height:
+            if ball.x - ball.radius <= left_paddle.x + left_paddle.width:
+                ball.x_vel *= -1
+
+                middle_y = left_paddle.y + left_paddle.height / 2
+                difference_in_y = middle_y - ball.y
+                reduction_factor = (left_paddle.height / 2) / ball.MAX_VELOCITY
+                y_vel = difference_in_y /reduction_factor
+                ball.y_vel = -1 * y_vel
+
+    # Right Paddle
+    else:
+        if ball.y >= right_paddle.y and ball.y <= right_paddle.y + right_paddle.height:
+            if ball.x + ball.radius >= right_paddle.x:
+                ball.x_vel *= -1
+
+                middle_y = right_paddle.y + right_paddle.height / 2
+                difference_in_y = middle_y - ball.y
+                reduction_factor = (right_paddle.height / 2) / ball.MAX_VELOCITY
+                y_vel = difference_in_y /reduction_factor
+                ball.y_vel = -1 * y_vel
+
+
 # Takes in paddles and uses key strokes to move them, called in main function
 def handle_paddle_movement(keys, left_paddle, right_paddle):
     if keys[pygame.K_w] and left_paddle.y - left_paddle.VELOCITY >= 0:
@@ -124,12 +155,15 @@ def main():
                 run = False
                 break
             
-            # Get keys pressed for paddle movement
-            keys = pygame.key.get_pressed()
-            handle_paddle_movement(keys, left_paddle, right_paddle)
+        # Get keys pressed for paddle movement
+        keys = pygame.key.get_pressed()
+        handle_paddle_movement(keys, left_paddle, right_paddle)
 
-            # Move ball
-            ball.move()
+        # Move ball
+        ball.move()
+
+        # Handle collisions
+        handle_collision(ball, left_paddle, right_paddle)
 
     pygame.quit()
 
