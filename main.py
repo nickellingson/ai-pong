@@ -24,7 +24,7 @@ WINNING_SCORE = 10
 class Paddle:
 
     COLOR = WHITE
-    VELOCITY = 7
+    VELOCITY = 10
 
     def __init__(self, x, y, width, height):
         self.x = self.original_x = x
@@ -48,7 +48,7 @@ class Paddle:
 
 class Ball:
     
-    MAX_VELOCITY = 3
+    MAX_VELOCITY = 10
     COLOR = WHITE
 
     def __init__(self, x, y, radius):
@@ -134,15 +134,29 @@ def handle_collision(ball, left_paddle, right_paddle):
 
 
 # Takes in paddles and uses key strokes to move them, called in main function
-def handle_paddle_movement(keys, left_paddle, right_paddle):
-    if keys[pygame.K_w] and left_paddle.y - left_paddle.VELOCITY >= 0:
-        left_paddle.move(up=True)
-    if keys[pygame.K_s] and left_paddle.y + left_paddle.VELOCITY + left_paddle.height <= HEIGHT:
-        left_paddle.move(up=False)
+def handle_paddle_movement(keys, left_paddle, right_paddle, ball_position_x, ball_positon_y):
 
-    if keys[pygame.K_i] and right_paddle.y - right_paddle.VELOCITY >= 0:
+    # AI for left player(paddle), cpu
+    # Watch x position of ball move more prominently as ball gets closer to cpu side
+
+    # If ball positon y is less than left_paddle decrease y position of paddle
+    # (If ball is above paddle move paddle up)
+    if ball_positon_y < (left_paddle.y + left_paddle.height // 2) and left_paddle.y - left_paddle.VELOCITY >= 0:
+        left_paddle.move(up = True)
+    # If ball postion y is more than left_paddle increase y positon of paddle
+    # (If ball is below paddle move paddle down)
+    if ball_positon_y > (left_paddle.y + left_paddle.height // 2) and left_paddle.y + left_paddle.VELOCITY + left_paddle.height <= HEIGHT:
+        left_paddle.move(up = False)
+
+    # Manual left player(paddle), for two person gameplay
+    # if keys[pygame.K_w] and left_paddle.y - left_paddle.VELOCITY >= 0:
+    #     left_paddle.move(up=True)
+    # if keys[pygame.K_s] and left_paddle.y + left_paddle.VELOCITY + left_paddle.height <= HEIGHT:
+    #     left_paddle.move(up=False)
+
+    if keys[pygame.K_UP] and right_paddle.y - right_paddle.VELOCITY >= 0:
         right_paddle.move(up=True)
-    if keys[pygame.K_k] and right_paddle.y + right_paddle.VELOCITY + right_paddle.height <= HEIGHT:
+    if keys[pygame.K_DOWN] and right_paddle.y + right_paddle.VELOCITY + right_paddle.height <= HEIGHT:
         right_paddle.move(up=False)
 
 
@@ -158,6 +172,8 @@ def main():
     left_score = 0
     right_score = 0
 
+    # # Patch
+    # count = 0
 
     # Game loop
     while run:
@@ -188,7 +204,22 @@ def main():
             
         # Get keys pressed for paddle movement
         keys = pygame.key.get_pressed()
-        handle_paddle_movement(keys, left_paddle, right_paddle)
+        
+        handle_paddle_movement(keys, left_paddle, right_paddle, ball.x, ball.y)
+
+        # Patch, ball stays on edge of screen, move ball off of edge
+        # if ball.y == 0:
+        #     print(count)
+        #     count += 1
+        #     if count == 2:
+        #         ball.y += 1
+        #         count = 0
+        # if ball.y == HEIGHT:
+        #     print(count)
+        #     count += 1
+        #     if count == 2:
+        #         ball.y -= 1
+        #         count = 0
 
         # Move ball
         ball.move()
